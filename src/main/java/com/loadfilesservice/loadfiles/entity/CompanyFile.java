@@ -1,6 +1,7 @@
 package com.loadfilesservice.loadfiles.entity;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import jakarta.persistence.Column;
@@ -12,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 @Entity
@@ -30,17 +32,18 @@ public class CompanyFile implements Serializable{
 	@Column(name = "file_path")
 	private String filePath;
 	
+	@NotEmpty
 	@Column(name = "ip_load")
 	private String ipLoad;
 	
 	@Column(name = "load_time")
-	private Date loadTime;
+	private LocalDateTime loadTime;
 	
-	@JoinColumn(name = "company_ide")
-	private Long comany;
+	@Column(name = "company_ide")
+	private Long company;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "file_type_ide")
+	@JoinColumn(name = "file_type_ide", referencedColumnName = "ide_file_type")
 	private CompanyFileType companyFileType;
 	
 	private static final long serialVersionUID = 1L;
