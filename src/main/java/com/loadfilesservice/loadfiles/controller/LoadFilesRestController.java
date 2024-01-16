@@ -3,6 +3,7 @@ package com.loadfilesservice.loadfiles.controller;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -45,6 +46,33 @@ public class LoadFilesRestController {
 		
 		if (!newfile.isEmpty()) {
 			String newFileName = null;
+			CompanyFile oldCompanyFile = null;
+		
+			List<CompanyFile> listCompanyFile = companyFileService.findByCompanyAndCompanyFileType(companyFileDTO.getCompany(), companyFileDTO.getCompanyFileType());
+			
+			for (CompanyFile companyFile : listCompanyFile) {
+				if(companyFile.getState() == 1) {
+					oldCompanyFile = companyFile;
+				}
+			}
+			
+			if (oldCompanyFile != null) {
+				oldCompanyFile.setState((long) 0);
+				
+				try {
+					companyFileService.save(oldCompanyFile);
+				} catch (Exception e) {
+					log.error("[LoadFilesRestController][uploadFile][loadfiles]" + " Error al intentar actualizar el registro del archivo en la base de datos: " + oldCompanyFile.getFileName());
+					throw new InternalServerErrorException("Error al intentar actualizar el registro del archivo en la base de datos: " + oldCompanyFile.getFileName());
+				}
+				
+				try {
+					companyFileService.deleteFile(oldCompanyFile.getFileName());
+				} catch (Exception e) {
+					log.error("[LoadFilesRestController][uploadFile][loadfiles]" + " Error al intentar borrar el archivo: " + oldCompanyFile.getFileName());
+					throw new InternalServerErrorException("Error al intentar borrar el archivo: " + oldCompanyFile.getFileName());
+				}
+			}
 			
 			try {
 				newFileName = companyFileService.copyFile(newfile);
@@ -56,8 +84,10 @@ public class LoadFilesRestController {
 			CompanyFile newCompanyFile = converter.companyFileDTOtoCompanyFile(companyFileDTO);
 			
 			newCompanyFile.setFileName(newFileName);
+			newCompanyFile.setOriginalFileName(newfile.getOriginalFilename());
 			newCompanyFile.setFilePath(companyFileService.getPath(newFileName).toString());
 			newCompanyFile.setLoadTime(LocalDateTime.now());
+			newCompanyFile.setState((long) 1);
 			
 			System.out.println(newCompanyFile);
 			

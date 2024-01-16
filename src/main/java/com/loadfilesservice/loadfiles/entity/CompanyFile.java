@@ -29,6 +29,9 @@ public class CompanyFile implements Serializable{
 	@Column(name = "file_name")
 	private String fileName;
 	
+	@Column(name = "original_file_name")
+	private String originalFileName;
+	
 	@Column(name = "file_path")
 	private String filePath;
 	
@@ -41,6 +44,9 @@ public class CompanyFile implements Serializable{
 	
 	@Column(name = "company_ide")
 	private Long company;
+	
+	@Column(name = "state")
+	private Long state;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "file_type_ide", referencedColumnName = "ide_file_type")
