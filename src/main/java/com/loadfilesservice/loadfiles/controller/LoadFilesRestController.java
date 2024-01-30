@@ -1,14 +1,22 @@
 package com.loadfilesservice.loadfiles.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,9 +28,11 @@ import com.google.gson.Gson;
 import com.loadfilesservice.loadfiles.dto.CompanyFileDTORequest;
 import com.loadfilesservice.loadfiles.dto.Converter;
 import com.loadfilesservice.loadfiles.entity.CompanyFile;
+import com.loadfilesservice.loadfiles.entity.CompanyFileType;
 import com.loadfilesservice.loadfiles.exceptions.InternalServerErrorException;
 import com.loadfilesservice.loadfiles.service.ICompanyFileService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,6 +112,63 @@ public class LoadFilesRestController {
 		}
 		
 		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+	}
+	
+	@PostMapping(value="/companyfile/upload/file/{id}")
+	public ResponseEntity<?> getFile(@Valid @RequestBody CompanyFileType fileType, @PathVariable Long id){
+		//Resource resource = null;
+		//File fileGetted = null;
+		CompanyFile companyFileFounded = null;
+		List<CompanyFile> listCompanyFile = null;
+		String fileOriginalName = null;
+		Map<String, Object> response = new HashMap<>();
+		
+		try {
+			listCompanyFile = companyFileService.findByCompanyAndCompanyFileType(id, fileType);
+		} catch (Exception e) {
+			log.error("[LoadFilesRestController][getFile][loadfiles]" + " Error al intentar obtener el archivo");
+			throw new InternalServerErrorException("Error al intentar obtener el archivo");
+		}
+		
+		
+		for (CompanyFile companyFile : listCompanyFile) {
+			if(companyFile.getState() == 1) {
+				companyFileFounded = companyFile;
+			}
+		}
+		
+		if(companyFileFounded != null) {
+			
+			fileOriginalName = companyFileFounded.getOriginalFileName();
+			response.put("fileName", fileOriginalName);
+			
+			/*try {
+				resource = companyFileService.loadFile(companyFileFounded.getFileName());
+			} catch (MalformedURLException e) {
+				log.error("[LoadFilesRestController][getFile][loadfiles]" + " Error al intentar obtener el archivo: " + companyFileFounded.getFileName());
+				throw new InternalServerErrorException("Error al intentar obtener el archivo: " + companyFileFounded.getFileName());
+			}*/
+		}
+		
+		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.OK);
+		
+		//if(resource != null) {
+			/*HttpHeaders headers = new HttpHeaders();
+			headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"");*/
+			
+			/*try {
+				fileGetted = resource.getFile();
+			} catch (IOException e) {
+				log.error("[LoadFilesRestController][getFile][loadfiles]" + " Error al intentar obtener el archivo del recurso: " + companyFileFounded.getFileName());
+				throw new InternalServerErrorException("Error al intentar obtener el archivo del recurso: " + companyFileFounded.getFileName());
+			}
+			
+			return new ResponseEntity<File>(fileGetted, HttpStatus.OK);
+		}
+		else {
+			return new ResponseEntity<File>(fileGetted, HttpStatus.OK);
+		}*/
+		
 	}
 	
 }
